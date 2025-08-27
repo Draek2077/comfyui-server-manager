@@ -6,9 +6,13 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading;
+using System.Threading; // Required for Mutex
 using System.Windows.Forms;
 using Microsoft.Win32;
+
+// Note for developers: If you get a "CS0017: Program has more than one entry point" error,
+// it's because the Visual Studio template created a separate Program.cs file.
+// You should delete that extra Program.cs file and use only this single file for the entire application.
 
 namespace ComfyUITrayManager
 {
@@ -432,7 +436,7 @@ namespace ComfyUITrayManager
 
     static class Program
     {
-        private const string AppMutexName = "ComfyUITrayManager-7E2B4E9A-3C1D-4B5F-8D9A-2C1B4E9A3C1D";
+        private const string AppMutexName = "ComfyUIServerManager-7E2B4E9A-3C1D-4B5F-8D9A-2C1B4E9A3C1D";
         private static Mutex? appMutex;
 
         [STAThread]
@@ -442,7 +446,7 @@ namespace ComfyUITrayManager
 
             if (!createdNew)
             {
-                MessageBox.Show("ComfyUI Tray Manager is already running.", "Application Already Running", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("ComfyUI Server Manager is already running.", "Application Already Running", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
@@ -523,7 +527,7 @@ namespace ComfyUITrayManager
 
             // Advanced
             chkDisableCustomNodes.Checked = Settings.Flags.DisableAllCustomNodes;
-            cmbVerboseLevel.SelectedItem = Settings.Flags.VerboseLevel;
+            cmbVerboseLevel.SelectedItem = Settings.Flags.VerboseLevel.ToString();
             txtOutputDir.Text = Settings.Flags.OutputDirectory;
             txtExtraModelsPath.Text = Settings.Flags.ExtraModelPathsConfig;
         }
@@ -565,7 +569,7 @@ namespace ComfyUITrayManager
 
             // Advanced
             Settings.Flags.DisableAllCustomNodes = chkDisableCustomNodes.Checked;
-            Settings.Flags.VerboseLevel = cmbVerboseLevel.SelectedItem != null ? (ComfyUIFlags.LogLevel)cmbVerboseLevel.SelectedItem : ComfyUIFlags.LogLevel.INFO;
+            Settings.Flags.VerboseLevel = cmbVerboseLevel.SelectedItem != null ? (ComfyUIFlags.LogLevel)Enum.Parse(typeof(ComfyUIFlags.LogLevel), (string)cmbVerboseLevel.SelectedItem) : ComfyUIFlags.LogLevel.INFO;
             Settings.Flags.OutputDirectory = txtOutputDir.Text;
             Settings.Flags.ExtraModelPathsConfig = txtExtraModelsPath.Text;
         }
