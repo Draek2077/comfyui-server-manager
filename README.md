@@ -1,4 +1,4 @@
-Draekz ComfyUI Server Manager
+# Draekz ComfyUI Server Manager
 
 This project aims to provide a Tray Icon application for Windows which supports all of ComfyUI's configuration options for running the server, along with convenience to start/stop the server, and have access to it's log from the system tray in windows. It supports some convenience features like being able to auto-restart the server when it crashes, along with starting the manager and the server when your system starts.
 
