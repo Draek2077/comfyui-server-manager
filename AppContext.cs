@@ -6,13 +6,9 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading; // Required for Mutex
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
-
-// Note for developers: If you get a "CS0017: Program has more than one entry point" error,
-// it's because the Visual Studio template created a separate Program.cs file.
-// You should delete that extra Program.cs file and use only this single file for the entire application.
 
 namespace ComfyUITrayManager
 {
