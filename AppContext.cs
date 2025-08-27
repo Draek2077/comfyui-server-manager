@@ -129,7 +129,7 @@ namespace ComfyUITrayManager
     {
         private AppSettings _settings = new AppSettings();
         private readonly string _settingsPath;
-        private static readonly string AppName = "ComfyUITrayManager";
+        private static readonly string AppName = "Comfy UI Server Manager";
         private Process? _comfyUIProcess;
         private NotifyIcon _trayIcon = new NotifyIcon();
         private LogForm? _logForm;

@@ -1,9 +1,82 @@
-﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package Id="TODO_Manufacturer.ComfyUI_Server_Manager_Installer" Name="ComfyUI-Server-Manager-Installer" Manufacturer="TODO Manufacturer" Version="1.0.0.0">
-    <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+  This is the main WiX configuration file for your installer.
+  You will replace the contents of your existing Package.wxs with this code.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-    <Feature Id="Main">
-      <ComponentGroupRef Id="ExampleComponents" />
+  <!-- 
+      The <Package> element defines the overall installer. 
+      - Name: The product name that appears in "Add or remove programs".
+      - Manufacturer: Your name or your company's name.
+      - Version: The version of your application.
+      - UpgradeCode: A unique GUID that identifies your application across different versions.
+        IMPORTANT: You MUST generate a new GUID for this value. In Visual Studio, go to Tools > Create GUID.
+    -->
+  <Package Name="ComfyUI Server Manager"
+           Manufacturer="Draekz"
+           Version="1.0.0.0"
+           UpgradeCode="08f8d139-35b0-48b8-bd51-ddb511922375">
+
+    <!-- This ensures that installing a newer version will automatically uninstall the old one. -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <!-- This element tells WiX to embed the cabinet file inside the MSI. -->
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- 
+          This section defines the core installation directory structure.
+          ProgramFiles64Folder is a standard WiX variable pointing to C:\Program Files\.
+          Your application will be installed in a subfolder named after your Manufacturer and ProductName.
+        -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="!(bind.property.Manufacturer)\!(bind.property.ProductName)" />
+    </StandardDirectory>
+
+    <!-- 
+          The <Feature> element groups the components to be installed. 
+          For a simple installer, we only need one feature.
+        -->
+    <Feature Id="Main" Title="Main Feature" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="Shortcuts" />
     </Feature>
   </Package>
+
+  <Fragment>
+    <!-- 
+          This ComponentGroup defines the files that will be installed.
+          It points to the INSTALLFOLDER directory we defined above.
+        -->
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <!-- 
+              This Component represents your main application executable.
+            -->
+      <Component Id="MainExecutable" Guid="*">
+        <File Id="ComfyUIManager.exe"
+              Name="ComfyUIManager.exe"
+              Source="publish\win-x64\ComfyUIServerManager.exe"
+              KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- 
+          FIX: This ComponentGroup is now separate again to resolve the errors.
+          It defines the Start Menu shortcuts.
+        -->
+    <ComponentGroup Id="Shortcuts" Directory="ProgramMenuFolder">
+      <Component Id="StartMenuShortcut" Guid="*">
+        <!-- This creates the shortcut in the Start Menu. -->
+        <Shortcut Id="StartMenuShortcut"
+                  Name="ComfyUI Server Manager"
+                  Description="A tray utility to manage the ComfyUI server."
+                  Target="[#ComfyUIManager.exe]"
+                  WorkingDirectory="INSTALLFOLDER"/>
+        <!-- This ensures the shortcut is removed when the application is uninstalled. -->
+        <RemoveFolder Id="RemoveStartMenuFolder" On="uninstall"/>
+        <!-- FIX: Using a registry key as the KeyPath for the shortcut component satisfies installer best practices. -->
+        <RegistryValue Root="HKCU" Key="Software\!(bind.property.Manufacturer)\!(bind.property.ProductName)" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
 </Wix>

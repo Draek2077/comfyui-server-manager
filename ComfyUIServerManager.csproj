@@ -3,21 +3,19 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
-    <RootNamespace>ComfyUI_Server_Manager</RootNamespace>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationIcon>Comfy_Logo.ico</ApplicationIcon>
     <StartupObject>ComfyUITrayManager.Program</StartupObject>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <ApplicationIcon>Comfy_Logo.ico</ApplicationIcon>
+    <PublishOnBuild>true</PublishOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="ExampleComponents.wxs" />
-    <None Remove="Folders.wxs" />
     <None Remove="Package.en-us.wxl" />
     <None Remove="Package.wxs" />
   </ItemGroup>
