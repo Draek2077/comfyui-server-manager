@@ -19,12 +19,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Comfy_Off.ico" />
+    <None Remove="Comfy_On.ico" />
     <None Remove="Package.en-us.wxl" />
     <None Remove="Package.wxs" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Comfy_Logo.ico" />
+    <EmbeddedResource Include="Comfy_Off.ico" />
+    <EmbeddedResource Include="Comfy_On.ico" />
   </ItemGroup>
 
   <ItemGroup>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -31,7 +32,7 @@ namespace ComfyUITrayManager
 
         // General
         public int Port { get; set; } = 8188;
-        public bool DisableAutoLaunch { get; set; } = false; // Corrected logic: Default is to launch.
+        public bool DisableAutoLaunch { get; set; } = false;
         public bool DisableMetadata { get; set; } = false;
         public bool MultiUser { get; set; } = false;
         public bool DontPrintServer { get; set; } = false;
@@ -52,6 +53,8 @@ namespace ComfyUITrayManager
         public LogLevel VerboseLevel { get; set; } = LogLevel.NONE;
         public string OutputDirectory { get; set; } = "";
         public string ExtraModelPathsConfig { get; set; } = "";
+        public string CustomFrontEndVersion { get; set; } = "";
+        public bool UseLatestFrontEnd { get; set; } = true;
 
 
         /// <summary>
@@ -63,7 +66,7 @@ namespace ComfyUITrayManager
 
             // General
             if (Port != 8188) sb.Append($"--port {Port} ");
-            if (DisableAutoLaunch) sb.Append("--disable-auto-launch "); // Corrected logic
+            if (DisableAutoLaunch) sb.Append("--disable-auto-launch ");
             if (DisableMetadata) sb.Append("--disable-metadata ");
             if (MultiUser) sb.Append("--multi-user ");
             if (DontPrintServer) sb.Append("--dont-print-server ");
@@ -107,6 +110,15 @@ namespace ComfyUITrayManager
             if (!string.IsNullOrWhiteSpace(OutputDirectory)) sb.Append($"--output-directory \"{OutputDirectory}\" ");
             if (!string.IsNullOrWhiteSpace(ExtraModelPathsConfig)) sb.Append($"--extra-model-paths-config \"{ExtraModelPathsConfig}\" ");
 
+            if (UseLatestFrontEnd)
+            {
+                sb.Append($"--front-end-version Comfy-Org/ComfyUI_frontend@latest ");
+            }
+            else if (!string.IsNullOrWhiteSpace(CustomFrontEndVersion))
+            {
+                sb.Append($"--front-end-version Comfy-Org/ComfyUI_frontend@{CustomFrontEndVersion} ");
+            }
+
             return sb.ToString().Trim();
         }
     }
@@ -129,16 +141,20 @@ namespace ComfyUITrayManager
     {
         private AppSettings _settings = new AppSettings();
         private readonly string _settingsPath;
-        private static readonly string AppName = "Comfy UI Server Manager";
+        private static readonly string AppName = "ComfyUI Server Manager";
         private Process? _comfyUIProcess;
         private NotifyIcon _trayIcon = new NotifyIcon();
         private LogForm? _logForm;
-        private readonly StringBuilder _logBuffer = new StringBuilder(); // Buffer to hold all logs
+        private readonly StringBuilder _logBuffer = new StringBuilder();
+        private Icon? _iconOn;
+        private Icon? _iconOff;
+        private Icon? _defaultIcon;
 
         public AppContext()
         {
             _settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppName, "settings.json");
             Application.ApplicationExit += OnApplicationExit;
+            LoadIcons();
             InitializeComponent();
 
             bool isFirstRun = !File.Exists(_settingsPath);
@@ -154,11 +170,35 @@ namespace ComfyUITrayManager
             if (_settings.AutoStartServerOnLaunch) StartComfyUI(null, new EventArgs());
         }
 
+        private void LoadIcons()
+        {
+            try
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+                // Make sure the namespace matches your project's default namespace
+                using (var stream = assembly.GetManifestResourceStream("ComfyUIServerManager.Comfy_On.ico")) { if (stream != null) _iconOn = new Icon(stream); }
+                using (var stream = assembly.GetManifestResourceStream("ComfyUIServerManager.Comfy_Off.ico")) { if (stream != null) _iconOff = new Icon(stream); }
+
+                _defaultIcon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+
+                if (_iconOn == null || _iconOff == null)
+                {
+                    LogToServer("Warning: Could not load custom status icons. Falling back to default.");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogToServer($"Error loading icons: {ex.Message}");
+                _defaultIcon = SystemIcons.Application; // A final fallback
+            }
+        }
+
         private void InitializeComponent()
         {
             var contextMenu = new ContextMenuStrip();
             contextMenu.Items.AddRange(new ToolStripItem[] {
                 new ToolStripMenuItem("Start ComfyUI", null, StartComfyUI) { Name = "start" },
+                new ToolStripMenuItem("Restart ComfyUI", null, RestartComfyUI) { Name = "restart" },
                 new ToolStripMenuItem("Stop ComfyUI", null, StopComfyUI) { Name = "stop" },
                 new ToolStripSeparator(),
                 new ToolStripMenuItem("View Logs", null, ShowHideLogs) { Name = "logs" },
@@ -174,7 +214,7 @@ namespace ComfyUITrayManager
 
             _trayIcon = new NotifyIcon()
             {
-                Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath),
+                Icon = _iconOff ?? _defaultIcon,
                 ContextMenuStrip = contextMenu,
                 Visible = true,
                 Text = AppName
@@ -190,6 +230,7 @@ namespace ComfyUITrayManager
             if (menu == null) return;
 
             menu.Items["start"]!.Enabled = !isRunning;
+            menu.Items["restart"]!.Enabled = isRunning;
             menu.Items["stop"]!.Enabled = isRunning;
             menu.Items["logs"]!.Enabled = true;
             ((ToolStripMenuItem)menu.Items["logs"]!).Checked = _logForm != null && _logForm.Visible;
@@ -198,6 +239,7 @@ namespace ComfyUITrayManager
             ((ToolStripMenuItem)menu.Items["winstart"]!).Checked = _settings.LaunchOnWindowsStart;
 
             _trayIcon.Text = isRunning ? $"{AppName} (Running - PID: {(_comfyUIProcess == null ? "" : _comfyUIProcess.Id)})" : $"{AppName} (Stopped)";
+            _trayIcon.Icon = isRunning ? (_iconOn ?? _defaultIcon) : (_iconOff ?? _defaultIcon);
         }
 
         #region Event Handlers
@@ -241,7 +283,9 @@ namespace ComfyUITrayManager
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
-                RedirectStandardError = true
+                RedirectStandardError = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
             };
 
             try
@@ -271,7 +315,7 @@ namespace ComfyUITrayManager
                 LogToServer("Stopping ComfyUI server process...");
                 bool wasAutoRestarting = _settings.AutoRestartOnCrash;
                 _settings.AutoRestartOnCrash = false;
-                _comfyUIProcess.Kill();
+                _comfyUIProcess.Kill(true);
                 _comfyUIProcess.WaitForExit();
                 _comfyUIProcess = null;
                 _settings.AutoRestartOnCrash = wasAutoRestarting;
@@ -281,11 +325,43 @@ namespace ComfyUITrayManager
             finally { UpdateMenuState(); }
         }
 
+        private void RestartComfyUI(object? sender, EventArgs e)
+        {
+            if (_comfyUIProcess != null && !_comfyUIProcess.HasExited)
+            {
+                LogToServer("Restarting ComfyUI server...");
+                _comfyUIProcess.Exited += StartAfterStop;
+                StopComfyUI(sender, e);
+            }
+            else
+            {
+                LogToServer("Server was not running. Starting...");
+                StartComfyUI(sender, e);
+            }
+        }
+
+        private void StartAfterStop(object? sender, EventArgs e)
+        {
+            if (sender is Process process)
+            {
+                process.Exited -= StartAfterStop;
+            }
+
+            if (_trayIcon.ContextMenuStrip != null && _trayIcon.ContextMenuStrip.InvokeRequired)
+            {
+                _trayIcon.ContextMenuStrip.Invoke(new System.Windows.Forms.MethodInvoker(() => StartComfyUI(null, EventArgs.Empty)));
+            }
+            else
+            {
+                StartComfyUI(null, EventArgs.Empty);
+            }
+        }
+
         private void OnComfyUIProcessExited(object? sender, EventArgs e)
         {
             LogToServer("ComfyUI server process has exited.");
             if (_trayIcon.ContextMenuStrip != null && _trayIcon.ContextMenuStrip.InvokeRequired)
-                _trayIcon.ContextMenuStrip.Invoke(new MethodInvoker(UpdateMenuState));
+                _trayIcon.ContextMenuStrip.Invoke(new System.Windows.Forms.MethodInvoker(UpdateMenuState));
             else
                 UpdateMenuState();
 
@@ -367,7 +443,7 @@ namespace ComfyUITrayManager
             if (_comfyUIProcess != null && !_comfyUIProcess.HasExited)
             {
                 _settings.AutoRestartOnCrash = false;
-                _comfyUIProcess.Kill();
+                _comfyUIProcess.Kill(true);
             }
             Application.Exit();
         }
@@ -472,9 +548,9 @@ namespace ComfyUITrayManager
         public AppSettings Settings { get; private set; }
 
         // Controls
-        private TextBox txtComfyUIPath = default!, txtOutputDir = default!, txtExtraModelsPath = default!;
+        private TextBox txtComfyUIPath = default!, txtOutputDir = default!, txtExtraModelsPath = default!, txtFrontEndVersion = default!;
         private NumericUpDown numPort = default!, numCudaDevice = default!;
-        private CheckBox chkDisableAutoLaunch = default!, chkDisableMetadata = default!, chkMultiUser = default!, chkDontPrintServer = default!, chkDisableCustomNodes = default!;
+        private CheckBox chkDisableAutoLaunch = default!, chkDisableMetadata = default!, chkMultiUser = default!, chkDontPrintServer = default!, chkDisableCustomNodes = default!, chkFrontEndVersionLatest = default!;
         private CheckBox chkForceFp16 = default!, chkForceFp32 = default!, chkDisableXformers = default!;
         private CheckBox chkManagerAutoStart = default!, chkManagerAutoRestart = default!, chkManagerLaunchOnWin = default!;
         private RadioButton rbAttnPytorch = default!, rbAttnSplit = default!, rbAttnQuad = default!, rbAttnSage = default!, rbAttnFlash = default!;
@@ -530,6 +606,9 @@ namespace ComfyUITrayManager
             cmbVerboseLevel.SelectedItem = Settings.Flags.VerboseLevel.ToString();
             txtOutputDir.Text = Settings.Flags.OutputDirectory;
             txtExtraModelsPath.Text = Settings.Flags.ExtraModelPathsConfig;
+            txtFrontEndVersion.Text = Settings.Flags.CustomFrontEndVersion;
+            chkFrontEndVersionLatest.Checked = Settings.Flags.UseLatestFrontEnd;
+            txtFrontEndVersion.Enabled = !chkFrontEndVersionLatest.Checked;
         }
 
         private void SaveSettingsFromControls()
@@ -572,6 +651,8 @@ namespace ComfyUITrayManager
             Settings.Flags.VerboseLevel = cmbVerboseLevel.SelectedItem != null ? (ComfyUIFlags.LogLevel)Enum.Parse(typeof(ComfyUIFlags.LogLevel), (string)cmbVerboseLevel.SelectedItem) : ComfyUIFlags.LogLevel.INFO;
             Settings.Flags.OutputDirectory = txtOutputDir.Text;
             Settings.Flags.ExtraModelPathsConfig = txtExtraModelsPath.Text;
+            Settings.Flags.CustomFrontEndVersion = txtFrontEndVersion.Text;
+            Settings.Flags.UseLatestFrontEnd = chkFrontEndVersionLatest.Checked;
         }
 
         private void InitializeComponent()
@@ -581,6 +662,7 @@ namespace ComfyUITrayManager
             this.ClientSize = new Size(520, 450);
             this.MaximizeBox = false; this.MinimizeBox = false;
             this.StartPosition = FormStartPosition.CenterScreen;
+            this.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
 
             var tabControl = new TabControl() { Dock = DockStyle.Top, Height = 380 };
 
@@ -610,7 +692,7 @@ namespace ComfyUITrayManager
             chkForceFp32 = new CheckBox() { Text = "Force FP32", Location = new Point(15, 45), Size = new Size(200, 20) };
             precisionGroup.Controls.AddRange(new Control[] { chkForceFp16, chkForceFp32 });
             var attnGroup = new GroupBox() { Text = "Attention Type", Location = new Point(10, 100), Size = new Size(480, 80) };
-            rbAttnPytorch = new RadioButton() { Text = "Pytorch (Default)", Location = new Point(15, 20), Checked = true };
+            rbAttnPytorch = new RadioButton() { Text = "Pytorch (Default)", Location = new Point(15, 20), Checked = true, AutoSize = true };
             rbAttnSplit = new RadioButton() { Text = "Split", Location = new Point(180, 20) };
             rbAttnQuad = new RadioButton() { Text = "Quad", Location = new Point(345, 20) };
             rbAttnSage = new RadioButton() { Text = "Sage", Location = new Point(15, 45) };
@@ -623,7 +705,7 @@ namespace ComfyUITrayManager
             // --- Hardware Tab ---
             var hwPage = new TabPage("Hardware");
             var procGroup = new GroupBox() { Text = "Processing Unit", Location = new Point(10, 10), Size = new Size(480, 50) };
-            rbProcDefault = new RadioButton() { Text = "Default (GPU)", Location = new Point(15, 20), Checked = true };
+            rbProcDefault = new RadioButton() { Text = "Default (GPU)", Location = new Point(15, 20), Checked = true, AutoSize = true };
             rbProcGpuOnly = new RadioButton() { Text = "GPU Only", Location = new Point(180, 20) };
             rbProcCpu = new RadioButton() { Text = "CPU Only", Location = new Point(345, 20) };
             procGroup.Controls.AddRange(new Control[] { rbProcDefault, rbProcGpuOnly, rbProcCpu });
@@ -631,7 +713,7 @@ namespace ComfyUITrayManager
             rbVramNormal = new RadioButton() { Text = "Normal", Location = new Point(15, 20), Checked = true };
             rbVramHigh = new RadioButton() { Text = "High", Location = new Point(120, 20) };
             rbVramLow = new RadioButton() { Text = "Low", Location = new Point(225, 20) };
-            rbVramNo = new RadioButton() { Text = "No VRAM (Slow)", Location = new Point(330, 20) };
+            rbVramNo = new RadioButton() { Text = "No VRAM (Slow)", Location = new Point(330, 20), AutoSize = true };
             vramGroup.Controls.AddRange(new Control[] { rbVramNormal, rbVramHigh, rbVramLow, rbVramNo });
             numCudaDevice = new NumericUpDown() { Location = new Point(120, 142), Size = new Size(100, 20), Minimum = 0, Maximum = 16 };
             hwPage.Controls.AddRange(new Control[] { procGroup, vramGroup, new Label() { Text = "CUDA Device ID:", Location = new Point(10, 144) }, numCudaDevice });
@@ -646,11 +728,21 @@ namespace ComfyUITrayManager
             var btnBrowseOutput = new Button() { Text = "Browse...", Location = new Point(410, 80), Size = new Size(80, 25) };
             txtExtraModelsPath = new TextBox() { Location = new Point(160, 112), Size = new Size(240, 20) };
             var btnBrowseModels = new Button() { Text = "Browse...", Location = new Point(410, 110), Size = new Size(80, 25) };
+
+            txtFrontEndVersion = new TextBox() { Location = new Point(340, 142), Size = new Size(65, 20) };
+            chkFrontEndVersionLatest = new CheckBox() { Text = "latest", Location = new Point(410, 142), Size = new Size(70, 20) };
+            var lblFrontEndPrefix = new Label() { Text = "Comfy-Org/ComfyUI_frontend@", Location = new Point(160, 144), AutoSize = true };
+
+            chkFrontEndVersionLatest.CheckedChanged += (s, e) => {
+                txtFrontEndVersion.Enabled = !chkFrontEndVersionLatest.Checked;
+            };
+
             advancedPage.Controls.AddRange(new Control[] {
                 chkDisableCustomNodes,
                 new Label() { Text = "Verbose Level:", Location = new Point(15, 50) }, cmbVerboseLevel,
                 new Label() { Text = "Output Directory:", Location = new Point(15, 84) }, txtOutputDir, btnBrowseOutput,
-                new Label() { Text = "Extra Models Config:", Location = new Point(15, 114) }, txtExtraModelsPath, btnBrowseModels
+                new Label() { Text = "Extra Models Config:", Location = new Point(15, 114) }, txtExtraModelsPath, btnBrowseModels,
+                new Label() { Text = "Front-End Version:", Location = new Point(15, 144) }, lblFrontEndPrefix, txtFrontEndVersion, chkFrontEndVersionLatest
             });
             tabControl.TabPages.Add(advancedPage);
 
