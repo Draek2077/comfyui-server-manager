@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36414.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ComfyUIServerManager", "ComfyUIServerManager.csproj", "{2BECE1AA-7E16-4C36-984B-B8FBF33941C5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ComfyUIServerManager", "ComfyUIServerManager\ComfyUIServerManager.csproj", "{2BECE1AA-7E16-4C36-984B-B8FBF33941C5}"
 EndProject
-Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "ComfyUIServerManagerInstaller", "ComfyUIServerManagerInstaller.wixproj", "{995F2712-47A3-7E81-79F3-21F2450C9A18}"
+Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "ComfyUIServerManagerInstaller", "ComfyUIServerManagerInstaller\ComfyUIServerManagerInstaller.wixproj", "{995F2712-47A3-7E81-79F3-21F2450C9A18}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,18 +37,12 @@ Global
 		{2BECE1AA-7E16-4C36-984B-B8FBF33941C5}.Release|x86.Build.0 = Release|Any CPU
 		{995F2712-47A3-7E81-79F3-21F2450C9A18}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{995F2712-47A3-7E81-79F3-21F2450C9A18}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{995F2712-47A3-7E81-79F3-21F2450C9A18}.Debug|ARM64.Build.0 = Debug|ARM64
 		{995F2712-47A3-7E81-79F3-21F2450C9A18}.Debug|x64.ActiveCfg = Debug|x64
-		{995F2712-47A3-7E81-79F3-21F2450C9A18}.Debug|x64.Build.0 = Debug|x64
 		{995F2712-47A3-7E81-79F3-21F2450C9A18}.Debug|x86.ActiveCfg = Debug|x86
-		{995F2712-47A3-7E81-79F3-21F2450C9A18}.Debug|x86.Build.0 = Debug|x86
 		{995F2712-47A3-7E81-79F3-21F2450C9A18}.Release|Any CPU.ActiveCfg = Release|x64
 		{995F2712-47A3-7E81-79F3-21F2450C9A18}.Release|ARM64.ActiveCfg = Release|ARM64
-		{995F2712-47A3-7E81-79F3-21F2450C9A18}.Release|ARM64.Build.0 = Release|ARM64
 		{995F2712-47A3-7E81-79F3-21F2450C9A18}.Release|x64.ActiveCfg = Release|x64
-		{995F2712-47A3-7E81-79F3-21F2450C9A18}.Release|x64.Build.0 = Release|x64
 		{995F2712-47A3-7E81-79F3-21F2450C9A18}.Release|x86.ActiveCfg = Release|x86
-		{995F2712-47A3-7E81-79F3-21F2450C9A18}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

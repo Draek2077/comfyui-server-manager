@@ -16,6 +16,8 @@
     <Title>ComfyUI Server Manager</Title>
     <Description>A tray icon management tool for the ComfyUI server.</Description>
     <RepositoryUrl>https://github.com/Draek2077/comfyui-server-manager.git</RepositoryUrl>
+    <Authors>Draekz</Authors>
+    <Company>Draekz</Company>
   </PropertyGroup>
 
   <ItemGroup>
