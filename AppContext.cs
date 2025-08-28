@@ -7,13 +7,9 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading; // Required for Mutex
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
-
-// Note for developers: If you get a "CS0017: Program has more than one entry point" error,
-// it's because the Visual Studio template created a separate Program.cs file.
-// You should delete that extra Program.cs file and use only this single file for the entire application.
 
 namespace ComfyUITrayManager
 {
@@ -837,11 +833,31 @@ namespace ComfyUITrayManager
         {
             switch (ansi)
             {
-                case "\x1B[31m": return Color.Red;
-                case "\x1B[32m": return Color.Green;
-                case "\x1B[33m": return Color.Yellow;
-                case "\x1B[36m": return Color.Cyan;
-                case "\x1B[0m": default: return def;
+                // --- Dark Colors ---
+                case "\x1B[31m": return Color.DarkRed;
+                case "\x1B[32m": return Color.DarkGreen;
+                case "\x1B[33m": return Color.DarkGoldenrod;
+                case "\x1B[34m": return Color.DarkBlue;
+                case "\x1B[35m": return Color.DarkMagenta;
+                case "\x1B[36m": return Color.DarkCyan;
+                
+                // --- Bright Colors ---
+                case "\x1B[91m": return Color.Red;
+                case "\x1B[92m": return Color.Green;
+                case "\x1B[93m": return Color.Yellow;
+                case "\x1B[94m": return Color.Blue;
+                case "\x1B[95m": return Color.Magenta;
+                case "\x1B[96m": return Color.Cyan;
+
+                // --- Shade Colors ---
+                case "\x1B[37m": return Color.Gray;
+                case "\x1B[90m": return Color.DarkGray;
+                case "\x1B[97m": return Color.White;
+                
+                // --- Reset Code ---
+                case "\x1B[0m":
+                default:
+                    return def;
             }
         }
     }
