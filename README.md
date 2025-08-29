@@ -23,4 +23,5 @@ The project was written entirely using Gemini 2.5 Pro, and is meant to be used b
 https://github.com/Draek2077/comfyui-ultimate-installer
 
 If you are interested in ComfyUI, please visit:
+
 https://github.com/comfyanonymous/ComfyUI
