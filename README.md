@@ -18,5 +18,7 @@ Log Window:
 
 The project was written entirely using Gemini 2.5 Pro, and is meant to be used by the Draekz ComfyUI Installer which allows easy installation of ComfyUI, the Server Manager, the Client Wrapper, a ton of nodes, models and options right from first install.
 
+The project uses .NET 8.0 for windows, WinForms components to get something that looks integrated easily and quickly. The installer is built using WixToolset.Sdk 6.0.1.
+
 If you are interested in ComfyUI, please visit:
 https://github.com/comfyanonymous/ComfyUI
