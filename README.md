@@ -16,7 +16,7 @@ Log Window:
 
 <img style="text-align: center" width="790" height="503" alt="image" src="https://github.com/user-attachments/assets/4f68cb23-d7e3-4cd8-b2cc-2f74cfe3dee4" />
 
-The project was written entirely using Gemini 2.5 Pro, and is meant to be used by the Draekz ComfyUI Installer which allows easy installation of ComfyUI, the Server Manager, a ton of nodes, models and options right from first install.
+The project was written entirely using Gemini 2.5 Pro, and is meant to be used by the Draekz ComfyUI Installer which allows easy installation of ComfyUI, the Server Manager, the Client Wrapper, a ton of nodes, models and options right from first install.
 
 If you are interested in ComfyUI, please visit:
 https://github.com/comfyanonymous/ComfyUI
