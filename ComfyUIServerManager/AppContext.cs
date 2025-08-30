@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Management;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -10,8 +11,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using MethodInvoker = System.Windows.Forms.MethodInvoker;
 
-namespace ComfyUITrayManager
+namespace ComfyUIServerManager
 {
     #region Settings Classes
 
@@ -146,6 +148,21 @@ namespace ComfyUITrayManager
         private Icon? _iconOff;
         private Icon? _defaultIcon;
 
+        // --- STATE MANAGEMENT ---
+        private enum ServerState { Stopped, Starting, Running }
+        private ServerState _serverState = ServerState.Stopped;
+        private static readonly Regex ServerReadyRegex = new Regex(@"^To see the GUI go to: http://", RegexOptions.Compiled);
+        
+        // --- PROCESS RE-ATTACHMENT ---
+        private string? _lastLaunchedScriptPath;
+        private readonly string? _pythonCommand = "python_embeded\\python.exe";
+        private readonly string? _comfyScript = "main.py";
+        
+        private System.Timers.Timer? _reattachTimer; // Use System.Timers.Timer for background threads
+        private int _reattachAttempts = 0;
+
+        private bool _stopExplicitlyRequested = false;
+        
         public AppContext()
         {
             _settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppName, "settings.json");
@@ -162,8 +179,13 @@ namespace ComfyUITrayManager
                 OpenSettings(null, new EventArgs());
             }
 
+            bool attached = TryAttachToExistingProcess();
             UpdateMenuState();
-            if (_settings.AutoStartServerOnLaunch) StartComfyUI(null, new EventArgs());
+
+            if (!attached && _settings.AutoStartServerOnLaunch)
+            {
+                StartComfyUI(null, new EventArgs());
+            }
         }
 
         private void LoadIcons()
@@ -171,7 +193,6 @@ namespace ComfyUITrayManager
             try
             {
                 var assembly = Assembly.GetExecutingAssembly();
-                // Make sure the namespace matches your project's default namespace
                 using (var stream = assembly.GetManifestResourceStream("ComfyUIServerManager.Comfy_On.ico")) { if (stream != null) _iconOn = new Icon(stream); }
                 using (var stream = assembly.GetManifestResourceStream("ComfyUIServerManager.Comfy_Off.ico")) { if (stream != null) _iconOff = new Icon(stream); }
 
@@ -221,21 +242,38 @@ namespace ComfyUITrayManager
 
         private void UpdateMenuState()
         {
-            bool isRunning = _comfyUIProcess != null && !_comfyUIProcess.HasExited;
             var menu = _trayIcon.ContextMenuStrip;
             if (menu == null) return;
 
-            menu.Items["start"]!.Enabled = !isRunning;
+            bool isRunning = _serverState == ServerState.Running;
+            bool isStarting = _serverState == ServerState.Starting;
+            bool isStopped = _serverState == ServerState.Stopped;
+
+            menu.Items["start"]!.Enabled = isStopped;
             menu.Items["restart"]!.Enabled = isRunning;
-            menu.Items["stop"]!.Enabled = isRunning;
+            menu.Items["stop"]!.Enabled = isRunning || isStarting;
             menu.Items["logs"]!.Enabled = true;
             ((ToolStripMenuItem)menu.Items["logs"]!).Checked = _logForm != null && _logForm.Visible;
             ((ToolStripMenuItem)menu.Items["autostart"]!).Checked = _settings.AutoStartServerOnLaunch;
             ((ToolStripMenuItem)menu.Items["autorestart"]!).Checked = _settings.AutoRestartOnCrash;
             ((ToolStripMenuItem)menu.Items["winstart"]!).Checked = _settings.LaunchOnWindowsStart;
 
-            _trayIcon.Text = isRunning ? $"{AppName} (Running - PID: {(_comfyUIProcess == null ? "" : _comfyUIProcess.Id)})" : $"{AppName} (Stopped)";
-            _trayIcon.Icon = isRunning ? (_iconOn ?? _defaultIcon) : (_iconOff ?? _defaultIcon);
+            switch (_serverState)
+            {
+                case ServerState.Running:
+                    _trayIcon.Text = $"{AppName} (Running - PID: {(_comfyUIProcess?.Id ?? 0)})";
+                    _trayIcon.Icon = _iconOn ?? _defaultIcon;
+                    break;
+                case ServerState.Starting:
+                    _trayIcon.Text = $"{AppName} (Starting...)";
+                    _trayIcon.Icon = _defaultIcon; // "Pending" icon
+                    break;
+                case ServerState.Stopped:
+                default:
+                    _trayIcon.Text = $"{AppName} (Stopped)";
+                    _trayIcon.Icon = _iconOff ?? _defaultIcon;
+                    break;
+            }
         }
 
         #region Event Handlers
@@ -257,7 +295,7 @@ namespace ComfyUITrayManager
 
         private void StartComfyUI(object? sender, EventArgs e)
         {
-            if (_comfyUIProcess != null && !_comfyUIProcess.HasExited) return;
+            if (_serverState != ServerState.Stopped) return;
             if (string.IsNullOrEmpty(_settings.ComfyUIPath) || !Directory.Exists(_settings.ComfyUIPath))
             {
                 MessageBox.Show("ComfyUI path is not set. Please configure it in Settings.", "Config Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -272,7 +310,12 @@ namespace ComfyUITrayManager
                 return;
             }
 
+            _serverState = ServerState.Starting;
+            UpdateMenuState();
+
+            _lastLaunchedScriptPath = mainScript; // Store unique script path for re-attachment
             string arguments = $"-s \"{mainScript}\" --windows-standalone-build {_settings.Flags.BuildArgumentString()}";
+
             var startInfo = new ProcessStartInfo(pythonExe, arguments)
             {
                 WorkingDirectory = _settings.ComfyUIPath,
@@ -293,26 +336,41 @@ namespace ComfyUITrayManager
                 _comfyUIProcess.Start();
                 _comfyUIProcess.BeginOutputReadLine();
                 _comfyUIProcess.BeginErrorReadLine();
-                LogToServer("ComfyUI server process started.");
+                LogToServer("ComfyUI server process starting...");
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to start ComfyUI:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 _comfyUIProcess = null;
+                _serverState = ServerState.Stopped;
+                UpdateMenuState();
             }
-            finally { UpdateMenuState(); }
         }
 
         private void StopComfyUI(object? sender, EventArgs e)
         {
-            if (_comfyUIProcess == null || _comfyUIProcess.HasExited) return;
+            _reattachTimer?.Stop();
+            _reattachTimer?.Dispose();
+            _reattachTimer = null;
+
+            _stopExplicitlyRequested = true;
+            
+            if (_serverState == ServerState.Stopped) return;
+            
             try
             {
                 LogToServer("Stopping ComfyUI server process...");
                 bool wasAutoRestarting = _settings.AutoRestartOnCrash;
                 _settings.AutoRestartOnCrash = false;
-                _comfyUIProcess.Kill(true);
-                _comfyUIProcess.WaitForExit();
+
+                if (_comfyUIProcess != null && !_comfyUIProcess.HasExited)
+                {
+                    _comfyUIProcess.Kill(true);
+                    _comfyUIProcess.WaitForExit();
+                }
+                
+
+                _serverState = ServerState.Stopped;
                 _comfyUIProcess = null;
                 _settings.AutoRestartOnCrash = wasAutoRestarting;
                 LogToServer("Server stopped.");
@@ -323,29 +381,36 @@ namespace ComfyUITrayManager
 
         private void RestartComfyUI(object? sender, EventArgs e)
         {
-            if (_comfyUIProcess != null && !_comfyUIProcess.HasExited)
+            if (_serverState == ServerState.Running)
             {
                 LogToServer("Restarting ComfyUI server...");
-                _comfyUIProcess.Exited += StartAfterStop;
+                if(_comfyUIProcess != null)
+                {
+                    _comfyUIProcess.Exited += StartAfterStop;
+                }
+                
+                
                 StopComfyUI(sender, e);
             }
-            else
+            else if (_serverState == ServerState.Stopped)
             {
                 LogToServer("Server was not running. Starting...");
                 StartComfyUI(sender, e);
             }
         }
 
-        private void StartAfterStop(object? sender, EventArgs e)
+        private async void StartAfterStop(object? sender, EventArgs e)
         {
             if (sender is Process process)
             {
                 process.Exited -= StartAfterStop;
             }
 
+            await Task.Delay(1000);
+            
             if (_trayIcon.ContextMenuStrip != null && _trayIcon.ContextMenuStrip.InvokeRequired)
             {
-                _trayIcon.ContextMenuStrip.Invoke(new System.Windows.Forms.MethodInvoker(() => StartComfyUI(null, EventArgs.Empty)));
+                _trayIcon.ContextMenuStrip.Invoke(new MethodInvoker(() => StartComfyUI(null, EventArgs.Empty)));
             }
             else
             {
@@ -355,35 +420,53 @@ namespace ComfyUITrayManager
 
         private void OnComfyUIProcessExited(object? sender, EventArgs e)
         {
+            if (_serverState == ServerState.Stopped)
+                return;
+
+            _comfyUIProcess = null;
+            _serverState = ServerState.Stopped;
             LogToServer("ComfyUI server process has exited.");
+
             if (_trayIcon.ContextMenuStrip != null && _trayIcon.ContextMenuStrip.InvokeRequired)
-                _trayIcon.ContextMenuStrip.Invoke(new System.Windows.Forms.MethodInvoker(UpdateMenuState));
+                _trayIcon.ContextMenuStrip.Invoke(new MethodInvoker(UpdateMenuState));
             else
                 UpdateMenuState();
+
+            if (_stopExplicitlyRequested)
+            {
+                _stopExplicitlyRequested = false;
+            }
+            else
+            {
+                InitiateReattachSearch();
+            }
 
             if (_settings.AutoRestartOnCrash)
             {
                 Action restartAction = () =>
                 {
-                    LogToServer("Auto-restarting server in 5 seconds...");
-                    var restartTimer = new System.Windows.Forms.Timer { Interval = 5000 };
-                    restartTimer.Tick += (s, args) =>
+                    if (_serverState == ServerState.Stopped)
                     {
-                        StartComfyUI(null, new EventArgs());
-                        restartTimer.Stop();
-                        restartTimer.Dispose();
-                    };
-                    restartTimer.Start();
+                        LogToServer("Auto-restarting server in 5 seconds...");
+                        var restartTimer = new System.Windows.Forms.Timer { Interval = 5000 };
+                        restartTimer.Tick += (s, args) =>
+                        {
+                            StartComfyUI(null, new EventArgs());
+                            restartTimer.Stop();
+                            restartTimer.Dispose();
+                        };
+                        restartTimer.Start();
+                    }
                 };
-
-                if (_trayIcon.ContextMenuStrip != null && _trayIcon.ContextMenuStrip.InvokeRequired)
-                {
-                    _trayIcon.ContextMenuStrip.Invoke(restartAction);
-                }
-                else
+                
+                var delayTimer = new System.Windows.Forms.Timer { Interval = 15000 }; // Wait 15s for re-attach to succeed
+                delayTimer.Tick += (s, args) =>
                 {
                     restartAction();
-                }
+                    delayTimer.Stop();
+                    delayTimer.Dispose();
+                };
+                delayTimer.Start();
             }
         }
 
@@ -410,6 +493,22 @@ namespace ComfyUITrayManager
         private void LogToServer(string? message)
         {
             if (message == null) return;
+            
+            if (_serverState == ServerState.Starting && ServerReadyRegex.IsMatch(message))
+            {
+                _serverState = ServerState.Running;
+                LogToServer("Server startup confirmed. UI state updated.");
+
+                if (_trayIcon.ContextMenuStrip?.InvokeRequired ?? false)
+                {
+                    _trayIcon.ContextMenuStrip.Invoke(new MethodInvoker(UpdateMenuState));
+                }
+                else
+                {
+                    UpdateMenuState();
+                }
+            }
+
             _logBuffer.AppendLine(message);
             if (_logForm != null && !_logForm.IsDisposed && _logForm.Visible)
             {
@@ -436,15 +535,124 @@ namespace ComfyUITrayManager
         private void Exit(object? sender, EventArgs e)
         {
             if (_trayIcon != null) _trayIcon.Visible = false;
-            if (_comfyUIProcess != null && !_comfyUIProcess.HasExited)
-            {
-                _settings.AutoRestartOnCrash = false;
-                _comfyUIProcess.Kill(true);
-            }
+            StopComfyUI(null, EventArgs.Empty); // Ensure controlled shutdown
             Application.Exit();
         }
 
         private void OnApplicationExit(object? sender, EventArgs e) { _logForm?.Dispose(); _trayIcon?.Dispose(); }
+
+        #endregion
+
+        #region Process Re-attachment
+
+        private bool TryAttachToExistingProcess()
+        {
+            if (string.IsNullOrEmpty(_settings.ComfyUIPath) || !Directory.Exists(_settings.ComfyUIPath))
+            {
+                return false;
+            }
+
+            _lastLaunchedScriptPath = Path.Combine(_settings.ComfyUIPath, "ComfyUI", "main.py");
+            if (!File.Exists(_lastLaunchedScriptPath))
+            {
+                return false;
+            }
+
+            try
+            {
+                string query = $"SELECT ProcessId, CommandLine FROM Win32_Process WHERE Name = 'python.exe'";
+                using (var searcher = new ManagementObjectSearcher(query))
+                using (var results = searcher.Get())
+                {
+                    foreach (ManagementObject process in results)
+                    {
+                        string? commandLine = process["CommandLine"]?.ToString();
+                        
+                        if (commandLine != null && commandLine.Contains(_pythonCommand) && commandLine.Contains(_comfyScript))
+                        {
+                            int pid = Convert.ToInt32(process["ProcessId"]);
+                            _comfyUIProcess = Process.GetProcessById(pid);
+                            _comfyUIProcess.EnableRaisingEvents = true;
+                            _comfyUIProcess.Exited += OnComfyUIProcessExited;
+                            _comfyUIProcess.OutputDataReceived += (s, args) => LogToServer(args.Data);
+                            _comfyUIProcess.ErrorDataReceived += (s, args) => LogToServer(args.Data);
+                            _serverState = ServerState.Running;
+                            LogToServer($"Attached to existing ComfyUI process (PID: {pid}).");
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogToServer($"Error during initial process scan: {ex.Message}");
+            }
+
+            return false;
+        }
+
+        private void InitiateReattachSearch()
+        {
+            if (string.IsNullOrEmpty(_lastLaunchedScriptPath)) return;
+
+            _reattachAttempts = 0;
+            _reattachTimer = new System.Timers.Timer(500); // Check every second
+            _reattachTimer.Elapsed += ReattachTimer_Tick;
+            _reattachTimer.AutoReset = true;
+            _reattachTimer.Start();
+            LogToServer("Searching for orphaned ComfyUI process to re-attach...");
+        }
+
+        private void ReattachTimer_Tick(object? sender, System.Timers.ElapsedEventArgs e)
+        {
+            _reattachAttempts++;
+            if (_reattachAttempts > 5) // Timeout after 15 seconds
+            {
+                _reattachTimer?.Stop();
+                _trayIcon.ContextMenuStrip?.Invoke(new MethodInvoker(() => {
+                    LogToServer("Re-attach search timed out. Could not find new ComfyUI process.");
+                    _reattachTimer?.Dispose();
+                    _reattachTimer = null;
+                }));
+                return;
+            }
+
+            try
+            {
+                string query = $"SELECT ProcessId, CommandLine FROM Win32_Process WHERE Name = 'python.exe'";
+                using (var searcher = new ManagementObjectSearcher(query))
+                using (var results = searcher.Get())
+                {
+                    foreach (ManagementObject process in results)
+                    {
+                        string? commandLine = process["CommandLine"]?.ToString();
+                        if (commandLine != null && commandLine.Contains(_lastLaunchedScriptPath!))
+                        {
+                            _reattachTimer?.Stop();
+                            int pid = Convert.ToInt32(process["ProcessId"]);
+                            
+                            _trayIcon.ContextMenuStrip?.Invoke(new MethodInvoker(() => {
+                                _comfyUIProcess = Process.GetProcessById(pid);
+                                _comfyUIProcess.EnableRaisingEvents = true;
+                                _comfyUIProcess.Exited += OnComfyUIProcessExited;
+                                _serverState = ServerState.Starting;
+                                UpdateMenuState();
+                                LogToServer($"Successfully re-attached to new process (PID: {pid}).");
+                                _reattachTimer?.Dispose();
+                                _reattachTimer = null;
+                            }));
+                            return;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                 _trayIcon.ContextMenuStrip?.Invoke(new MethodInvoker(() => {
+                     LogToServer($"Error during re-attach search: {ex.Message}");
+                 }));
+            }
+        }
 
         #endregion
 
@@ -825,8 +1033,23 @@ namespace ComfyUITrayManager
                 logBox.AppendText(Environment.NewLine);
             }
 
-            logBox.SelectionStart = logBox.Text.Length;
-            logBox.ScrollToCaret();
+            // The jittery scrolling happens because ScrollToCaret() is called immediately after
+            // appending text, but the RichTextBox might not have fully updated its internal
+            // layout and scrollbars yet. By using BeginInvoke, we schedule the scroll operation
+            // to occur after the current message processing is complete, ensuring the layout
+            // is up-to-date and the scroll goes to the correct final position.
+            // A check for IsHandleCreated is important as BeginInvoke requires a window handle.
+            if (IsHandleCreated)
+            {
+                BeginInvoke((MethodInvoker)delegate {
+                    // Check if the control is still around when the delegate runs.
+                    if (!logBox.IsDisposed)
+                    {
+                        logBox.SelectionStart = logBox.TextLength;
+                        logBox.ScrollToCaret();
+                    }
+                });
+            }
         }
 
         private Color GetColorFromAnsiCode(string ansi, Color def)
@@ -864,3 +1087,4 @@ namespace ComfyUITrayManager
 
     #endregion
 }
+
