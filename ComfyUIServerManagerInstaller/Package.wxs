@@ -4,18 +4,9 @@
   You will replace the contents of your existing Package.wxs with this code.
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-
-    <!-- 
-        The <Package> element defines the overall installer. 
-        - Name: The product name that appears in "Add or remove programs".
-        - Manufacturer: Your name or your company's name.
-        - Version: The version of your application.
-        - UpgradeCode: A unique GUID that identifies your application across different versions.
-          IMPORTANT: You MUST generate a new GUID for this value. In Visual Studio, go to Tools > Create GUID.
-      -->
     <Package Name="ComfyUI Server Manager"
              Manufacturer="Draekz"
-             Version="1.0.0.0"
+             Version="$(var.ProductVersion)"
              UpgradeCode="4045d4f7-11fc-4744-b0cf-d129c18e8fd3">
         <!-- Platform attribute removed for WiX v4; architecture is selected at build. -->
 

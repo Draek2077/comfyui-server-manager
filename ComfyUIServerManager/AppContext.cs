@@ -238,14 +238,15 @@ public class AppContext : ApplicationContext
         var contextMenu = new ContextMenuStrip();
         contextMenu.Items.AddRange(new ToolStripItem[]
         {
-            new ToolStripMenuItem("Start ComfyUI", null, StartComfyUI) { Name = "start" },
-            new ToolStripMenuItem("Restart ComfyUI", null, RestartComfyUI) { Name = "restart" },
-            new ToolStripMenuItem("Stop ComfyUI", null, StopComfyUI) { Name = "stop" },
+            new ToolStripMenuItem("Start ComfyUI Server", null, StartComfyUI) { Name = "start" },
+            new ToolStripMenuItem("Restart ComfyUI Server", null, RestartComfyUI) { Name = "restart" },
+            new ToolStripMenuItem("Stop ComfyUI Server", null, StopComfyUI) { Name = "stop" },
             new ToolStripSeparator(),
-            new ToolStripMenuItem("View Logs", null, ShowHideLogs) { Name = "logs" },
+            new ToolStripMenuItem("View Server Logs", null, ShowHideLogs) { Name = "logs" },
             new ToolStripSeparator(),
             new ToolStripMenuItem("Auto-Start Server on Launch", null, ToggleAutoStartServer) { Name = "autostart" },
-            new ToolStripMenuItem("Auto-Restart on Crash", null, ToggleAutoRestart) { Name = "autorestart" },
+            new ToolStripMenuItem("Auto-Restart Server on Crash", null, ToggleAutoRestart) { Name = "autorestart" },
+            new ToolStripSeparator(),
             new ToolStripMenuItem("Launch on Windows Start", null, ToggleLaunchOnStart) { Name = "winstart" },
             new ToolStripSeparator(),
             new ToolStripMenuItem("Settings...", null, OpenSettings),
@@ -1065,6 +1066,29 @@ public class SettingsForm : Form
             Text = "Cancel", Location = new Point(425, 400), Size = new Size(75, 25), DialogResult = DialogResult.Cancel
         };
 
+        // START: Modified Version Label Logic
+        // Get AssemblyInformationalVersion, which contains the full SemVer string.
+        var assembly = Assembly.GetExecutingAssembly();
+        var fullVersionString = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+        // Fallback to the standard assembly version if the informational one isn't present.
+        if (string.IsNullOrEmpty(fullVersionString))
+        {
+            fullVersionString = assembly.GetName().Version?.ToString();
+        }
+
+        // Parse the full version string to get only the Major.Minor.Patch part (e.g., "1.0.1").
+        var simpleVersion = fullVersionString?.Split('-').FirstOrDefault()?.Split('+').FirstOrDefault() ?? "N/A";
+
+        var versionLabel = new Label
+        {
+            Text = $"Version: {simpleVersion}",
+            // Align left (15px), and vertically center with the buttons (Y=400, H=25).
+            Location = new Point(15, 406),
+            AutoSize = true,
+            ForeColor = SystemColors.GrayText
+        };
+        
         btnBrowsePath.Click += (s, e) =>
         {
             using (var fbd = new FolderBrowserDialog
@@ -1100,7 +1124,7 @@ public class SettingsForm : Form
         };
         AcceptButton = btnOk;
         CancelButton = btnCancel;
-        Controls.AddRange(new Control[] { tabControl, btnOk, btnCancel });
+        Controls.AddRange(new Control[] { tabControl, btnOk, btnCancel, versionLabel });
     }
 }
 
