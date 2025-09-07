@@ -1,16 +1,19 @@
 ﻿<Project Sdk="WixToolset.Sdk/6.0.1">
-  <PropertyGroup>
-    <Configurations>Debug;Release</Configurations>
-    <Platforms>x64;ARM64;x86</Platforms>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ComfyUIServerManager\ComfyUIServerManager.csproj">
-      <Name>ComfyUIServerManager</Name>
-      <Project>{2bece1aa-7e16-4c36-984b-b8fbf33941c5}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
-  </ItemGroup>
+    <PropertyGroup>
+        <Configurations>Debug;Release</Configurations>
+        <Platforms>x64;ARM64;x86</Platforms>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\ComfyUIServerManager\ComfyUIServerManager.csproj">
+            <Name>ComfyUIServerManager</Name>
+            <Project>{2bece1aa-7e16-4c36-984b-b8fbf33941c5}</Project>
+            <Private>True</Private>
+            <DoNotHarvest>True</DoNotHarvest>
+            <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+            <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+        </ProjectReference>
+    </ItemGroup>
+    <PropertyGroup>
+        <DefineConstants>ProductVersion=$([System.IO.File]::ReadAllText('$(SolutionDir)ComfyUIServerManager\version.txt').Trim())</DefineConstants>
+    </PropertyGroup>
 </Project>

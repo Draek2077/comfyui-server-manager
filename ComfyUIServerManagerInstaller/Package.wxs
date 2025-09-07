@@ -16,21 +16,21 @@
     <Package Name="ComfyUI Server Manager"
              Manufacturer="Draekz"
              Version="1.0.0.0"
-             UpgradeCode="08f8d139-35b0-48b8-bd51-ddb511922375">
+             UpgradeCode="4045d4f7-11fc-4744-b0cf-d129c18e8fd3">
         <!-- Platform attribute removed for WiX v4; architecture is selected at build. -->
 
         <!-- This ensures that installing a newer version will automatically uninstall the old one. -->
-        <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+        <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."/>
 
         <!-- This element tells WiX to embed the cabinet file inside the MSI. -->
-        <MediaTemplate EmbedCab="yes" />
+        <MediaTemplate EmbedCab="yes"/>
 
         <!-- 
               This section defines the core installation directory structure.
             -->
         <!-- FIX: Changed from ProgramFilesFolder to ProgramFiles64Folder to resolve the ICE80 error. -->
         <StandardDirectory Id="ProgramFiles64Folder">
-            <Directory Id="INSTALLFOLDER" Name="!(bind.property.Manufacturer)\!(bind.property.ProductName)" />
+            <Directory Id="INSTALLFOLDER" Name="!(bind.property.Manufacturer)\!(bind.property.ProductName)"/>
         </StandardDirectory>
 
         <!-- 
@@ -38,9 +38,9 @@
               For a simple installer, we only need one feature.
             -->
         <Feature Id="Main" Title="Main Feature" Level="1">
-            <ComponentGroupRef Id="ProductComponents" />
+            <ComponentGroupRef Id="ProductComponents"/>
             <!-- FIX: Re-added the reference to the Shortcuts component group. -->
-            <ComponentGroupRef Id="Shortcuts" />
+            <ComponentGroupRef Id="Shortcuts"/>
         </Feature>
     </Package>
 
@@ -62,7 +62,7 @@
                 <File Id="ComfyUIServerManager.exe"
                       Name="ComfyUIServerManager.exe"
                       Source="publish\ComfyUIServerManager.exe"
-                      KeyPath="yes" />
+                      KeyPath="yes"/>
             </Component>
         </ComponentGroup>
 
@@ -79,7 +79,8 @@
                           WorkingDirectory="INSTALLFOLDER"/>
                 <RemoveFolder Id="RemoveStartMenuFolder" On="uninstall"/>
                 <!-- This per-user registry key is now the KeyPath for this per-user component. -->
-                <RegistryValue Root="HKCU" Key="Software\!(bind.property.Manufacturer)\!(bind.property.ProductName)" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+                <RegistryValue Root="HKCU" Key="Software\!(bind.property.Manufacturer)\!(bind.property.ProductName)"
+                               Name="installed" Type="integer" Value="1" KeyPath="yes"/>
             </Component>
         </ComponentGroup>
     </Fragment>
