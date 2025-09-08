@@ -1,0 +1,29 @@
+﻿<!-- (In the Views folder) -->
+<Window
+    x:Class="ComfyUIServerManagerModern.Views.LogWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="ComfyUI Server Logs">
+
+    <Grid Background="#1E1E1E">
+        <!-- The ScrollViewer handles scrolling for the entire log content -->
+        <ScrollViewer x:Name="LogScrollViewer" 
+                      VerticalScrollBarVisibility="Auto" 
+                      HorizontalScrollBarVisibility="Auto">
+
+            <!-- 
+            The RichTextBlock will contain all of our log paragraphs and colored runs.
+            It's the ideal control for displaying a continuous flow of formatted text.
+            -->
+            <RichTextBlock x:Name="LogRichTextBlock" 
+                           FontFamily="Consolas" 
+                           FontSize="14"
+                           IsTextSelectionEnabled="True"
+                           TextWrapping="Wrap"/>
+                           
+        </ScrollViewer>
+    </Grid>
+</Window>

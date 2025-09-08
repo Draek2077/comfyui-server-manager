@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+    
+<Window
+    x:Class="ComfyUIServerManagerModern.Views.SettingsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Settings">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TabView Grid.Row="0">
+            <TabView.TabItems>
+                <TabViewItem Header="General">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="ComfyUI Path" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBox Text="{x:Bind ViewModel.Settings.ComfyUIPath, Mode=TwoWay}" />
+
+                        <Expander Header="Manager Settings" IsExpanded="True" Margin="0,16,0,0">
+                            <StackPanel Spacing="4" Margin="12,0,0,0">
+                                <CheckBox Content="Auto-Start Server on Launch"
+                                          IsChecked="{x:Bind ViewModel.Settings.AutoStartServerOnLaunch, Mode=TwoWay}" />
+                                <CheckBox Content="Auto-Restart on Crash"
+                                          IsChecked="{x:Bind ViewModel.Settings.AutoRestartOnCrash, Mode=TwoWay}" />
+                                <CheckBox Content="Launch Manager on Windows Start"
+                                          IsChecked="{x:Bind ViewModel.Settings.LaunchOnWindowsStart, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Expander>
+
+                    </StackPanel>
+                </TabViewItem>
+
+                <TabViewItem Header="Performance" />
+
+                <TabViewItem Header="Hardware" />
+
+                <TabViewItem Header="Advanced" />
+            </TabView.TabItems>
+        </TabView>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
+            <Button Content="Save" Style="{ThemeResource AccentButtonStyle}" Click="SaveButton_Click" />
+            <Button Content="Cancel" Click="CancelButton_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

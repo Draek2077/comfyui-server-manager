@@ -14,7 +14,7 @@ namespace ComfyUIServerManager;
 #region Settings Classes
 
 /// <summary>
-/// Holds all the configurable command-line flags for ComfyUI.
+///     Holds all the configurable command-line flags for ComfyUI.
 /// </summary>
 public class ComfyUIFlags
 {
@@ -81,7 +81,7 @@ public class ComfyUIFlags
 
 
     /// <summary>
-    /// Builds the command-line argument string from the current settings.
+    ///     Builds the command-line argument string from the current settings.
     /// </summary>
     public string BuildArgumentString()
     {
@@ -144,7 +144,7 @@ public class ComfyUIFlags
 }
 
 /// <summary>
-/// Main application settings class.
+///     Main application settings class.
 /// </summary>
 public class AppSettings
 {
@@ -1069,13 +1069,11 @@ public class SettingsForm : Form
         // START: Modified Version Label Logic
         // Get AssemblyInformationalVersion, which contains the full SemVer string.
         var assembly = Assembly.GetExecutingAssembly();
-        var fullVersionString = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        var fullVersionString =
+            assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
         // Fallback to the standard assembly version if the informational one isn't present.
-        if (string.IsNullOrEmpty(fullVersionString))
-        {
-            fullVersionString = assembly.GetName().Version?.ToString();
-        }
+        if (string.IsNullOrEmpty(fullVersionString)) fullVersionString = assembly.GetName().Version?.ToString();
 
         // Parse the full version string to get only the Major.Minor.Patch part (e.g., "1.0.1").
         var simpleVersion = fullVersionString?.Split('-').FirstOrDefault()?.Split('+').FirstOrDefault() ?? "N/A";
@@ -1088,7 +1086,7 @@ public class SettingsForm : Form
             AutoSize = true,
             ForeColor = SystemColors.GrayText
         };
-        
+
         btnBrowsePath.Click += (s, e) =>
         {
             using (var fbd = new FolderBrowserDialog
@@ -1172,7 +1170,7 @@ public class LogForm : Form
     }
 
     /// <summary>
-    /// Populates the log box with a large string of historical logs.
+    ///     Populates the log box with a large string of historical logs.
     /// </summary>
     public void SetInitialLogContent(string fullLog)
     {
@@ -1189,7 +1187,7 @@ public class LogForm : Form
     }
 
     /// <summary>
-    /// Appends a single new line of text to the log box.
+    ///     Appends a single new line of text to the log box.
     /// </summary>
     public void AppendLog(string text)
     {
@@ -1203,7 +1201,7 @@ public class LogForm : Form
     }
 
     /// <summary>
-    /// Core logic to process a string for ANSI color codes and append it to the RichTextBox.
+    ///     Core logic to process a string for ANSI color codes and append it to the RichTextBox.
     /// </summary>
     private void ProcessAndAppend(string text, bool addNewLine)
     {

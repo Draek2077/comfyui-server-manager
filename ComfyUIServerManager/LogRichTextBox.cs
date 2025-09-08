@@ -35,12 +35,12 @@ internal class LogRichTextBox : RichTextBox
     private static extern int GetScrollInfo(IntPtr hwnd, int fnBar, ref SCROLLINFO lpsi);
 
     /// <summary>
-    /// Custom event that fires when a vertical scroll occurs.
+    ///     Custom event that fires when a vertical scroll occurs.
     /// </summary>
     public new event EventHandler? VScroll;
 
     /// <summary>
-    /// Overrides the default window procedure to capture scroll messages.
+    ///     Overrides the default window procedure to capture scroll messages.
     /// </summary>
     protected override void WndProc(ref Message m)
     {
@@ -78,7 +78,7 @@ internal class LogRichTextBox : RichTextBox
     }
 
     /// <summary>
-    /// Determines if the vertical scrollbar is near the bottom.
+    ///     Determines if the vertical scrollbar is near the bottom.
     /// </summary>
     /// <param name="thresholdPercent">The percentage from the bottom to consider "near". Defaults to 0.95 (95%).</param>
     /// <returns>True if the scroll position is at or past the threshold.</returns>

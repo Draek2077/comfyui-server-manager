@@ -1,0 +1,35 @@
+<Application
+    x:Class="ComfyUIServerManagerModern.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:tb="using:H.NotifyIcon" xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    xmlns:vm="using:ComfyUIServerManagerModern.ViewModels">
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <MenuFlyout x:Key="TrayMenuFlyout" >
+                <MenuFlyoutItem Text="Start ComfyUI Server" Command="{Binding StartServerCommand}"/>
+                <MenuFlyoutItem Text="Restart ComfyUI Server" Command="{Binding RestartServerCommand}"/>
+                <MenuFlyoutItem Text="Stop ComfyUI Server" Command="{Binding StopServerCommand}"/>
+                <MenuFlyoutSeparator/>
+                <MenuFlyoutItem Text="View Server Logs" Command="{Binding ShowLogsCommand}"/>
+                <MenuFlyoutSeparator/>
+                <ToggleMenuFlyoutItem Text="Auto-Start Server on Launch" IsChecked="{Binding AutoStartServer, Mode=TwoWay}"/>
+                <ToggleMenuFlyoutItem Text="Auto-Restart Server on Crash" IsChecked="{Binding AutoRestartOnCrash, Mode=TwoWay}"/>
+                <MenuFlyoutSeparator/>
+                <ToggleMenuFlyoutItem Text="Launch on Windows Start" IsChecked="{Binding LaunchOnWindowsStart, Mode=TwoWay}"/>
+                <MenuFlyoutSeparator/>
+                <MenuFlyoutItem Text="Settings..." Command="{Binding ShowSettingsCommand}"/>
+                <MenuFlyoutSeparator/>
+                <MenuFlyoutItem Text="Exit" Command="{Binding ExitApplicationCommand}"/>
+            </MenuFlyout>
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

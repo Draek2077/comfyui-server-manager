@@ -62,12 +62,12 @@
 
     <ItemGroup>
         <PackageReference Include="GitVersion.MsBuild" Version="6.4.0">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="System.Management" Version="9.0.8"/>
     </ItemGroup>
     <Target Name="WriteVersionToFile" AfterTargets="CoreCompile">
-        <WriteLinesToFile File="$(ProjectDir)version.txt" Lines="$(Version)" Overwrite="true" />
+        <WriteLinesToFile File="$(ProjectDir)version.txt" Lines="$(Version)" Overwrite="true"/>
     </Target>
 </Project>
