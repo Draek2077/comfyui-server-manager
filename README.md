@@ -10,8 +10,6 @@ System Tray Icon, Menu and Taskbar:
 
 <img width="460" height="329" alt="Screenshot 2025-09-08 175218" src="https://github.com/user-attachments/assets/305781f8-6b10-4087-a838-08f96b640f89" />
 
-<img width="135" height="69" alt="Screenshot 2025-09-08 175718" src="https://github.com/user-attachments/assets/8db606dd-a6e8-4609-80f5-a64f936f130a" />
-
 Settings Panel:
 
 <img width="525" height="480" alt="Screenshot 2025-09-08 175300" src="https://github.com/user-attachments/assets/28466a09-ccd6-40a9-b42c-236a92666fa0" />
