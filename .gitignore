@@ -5,6 +5,9 @@
 
 version.txt
 
+# Linux packaging build artifacts
+dist/
+
 # Jetbrains folder
 .idea
 

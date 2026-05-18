@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=ComfyUI Server Manager
+GenericName=ComfyUI Server Manager
+Comment=Tray tool to start, stop and monitor the ComfyUI server
+Exec=/usr/bin/comfyui-server-manager
+Icon=comfyui-server-manager
+Terminal=false
+Categories=Graphics;Utility;
+StartupNotify=false
+StartupWMClass=ComfyUIServerManager
+Keywords=ComfyUI;AI;Stable Diffusion;Server;Tray;

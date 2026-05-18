@@ -1,0 +1,198 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="ComfyUIServerManager.Views.SettingsWindow"
+        Title="ComfyUI Server Manager Settings"
+        Width="640" Height="640"
+        MinWidth="560" MinHeight="600"
+        CanResize="True"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid RowDefinitions="*,Auto">
+
+        <TabControl Grid.Row="0" Margin="8">
+
+            <!-- General -->
+            <TabItem Header="General">
+                <ScrollViewer>
+                    <StackPanel Margin="8" Spacing="14">
+
+                        <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="ComfyUI Install" FontWeight="SemiBold" />
+
+                                <Grid ColumnDefinitions="120,*">
+                                    <TextBlock Grid.Column="0" Text="Launch Mode:" VerticalAlignment="Center" />
+                                    <ComboBox x:Name="cmbLaunchMode" Grid.Column="1" SelectedIndex="0" />
+                                </Grid>
+
+                                <Grid ColumnDefinitions="120,*,Auto" RowDefinitions="Auto">
+                                    <TextBlock Grid.Column="0" Text="ComfyUI Path:" VerticalAlignment="Center" />
+                                    <TextBox Grid.Column="1" x:Name="txtComfyUIPath" />
+                                    <Button Grid.Column="2" x:Name="btnBrowsePath" Content="Browse..." Margin="6,0,0,0" />
+                                </Grid>
+
+                                <Grid x:Name="customPathsPanel" ColumnDefinitions="120,*,Auto" RowDefinitions="Auto,Auto" RowSpacing="6">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Python Exe:" VerticalAlignment="Center" />
+                                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtCustomPython" />
+                                    <Button Grid.Row="0" Grid.Column="2" x:Name="btnBrowsePython" Content="Browse..." Margin="6,0,0,0" />
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="main.py:" VerticalAlignment="Center" />
+                                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="txtCustomMain" />
+                                    <Button Grid.Row="1" Grid.Column="2" x:Name="btnBrowseMain" Content="Browse..." Margin="6,0,0,0" />
+                                </Grid>
+
+                                <TextBlock x:Name="lblLaunchHint" TextWrapping="Wrap" Foreground="#888" FontSize="12" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Manager Settings" FontWeight="SemiBold" />
+                                <CheckBox x:Name="chkManagerAutoStart" Content="Auto-Start Server on Launch" />
+                                <CheckBox x:Name="chkManagerAutoRestart" Content="Auto-Restart on Crash" />
+                                <CheckBox x:Name="chkManagerLaunchOnSystemStart" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Server Settings" FontWeight="SemiBold" />
+                                <Grid ColumnDefinitions="120,120,*">
+                                    <TextBlock Grid.Column="0" Text="Port:" VerticalAlignment="Center" />
+                                    <NumericUpDown Grid.Column="1" x:Name="numPort" Minimum="1" Maximum="65535" Value="8188" />
+                                </Grid>
+                                <Grid ColumnDefinitions="*,*">
+                                    <StackPanel Grid.Column="0" Spacing="4">
+                                        <CheckBox x:Name="chkDisableAutoLaunch" Content="Disable Auto-Launch Browser" />
+                                        <CheckBox x:Name="chkDisableMetadata" Content="Disable Metadata in Images" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="4">
+                                        <CheckBox x:Name="chkMultiUser" Content="Enable Multi-User Mode" />
+                                        <CheckBox x:Name="chkDontPrintServer" Content="Don't Print Server Info" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Performance -->
+            <TabItem Header="Performance">
+                <StackPanel Margin="16" Spacing="14">
+
+                    <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Precision" FontWeight="SemiBold" />
+                            <CheckBox x:Name="chkForceFp16" Content="Force FP16" />
+                            <CheckBox x:Name="chkForceFp32" Content="Force FP32" />
+                            <CheckBox x:Name="chkDisableXformers" Content="Disable xFormers" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Attention Type" FontWeight="SemiBold" />
+                            <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto">
+                                <RadioButton Grid.Row="0" Grid.Column="0" x:Name="rbAttnPytorch" GroupName="attn" Content="Pytorch (Default)" IsChecked="True" />
+                                <RadioButton Grid.Row="0" Grid.Column="1" x:Name="rbAttnSplit"   GroupName="attn" Content="Split" />
+                                <RadioButton Grid.Row="0" Grid.Column="2" x:Name="rbAttnQuad"    GroupName="attn" Content="Quad" />
+                                <RadioButton Grid.Row="1" Grid.Column="0" x:Name="rbAttnSage"    GroupName="attn" Content="Sage" />
+                                <RadioButton Grid.Row="1" Grid.Column="1" x:Name="rbAttnFlash"   GroupName="attn" Content="Flash" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </TabItem>
+
+            <!-- Hardware -->
+            <TabItem Header="Hardware">
+                <StackPanel Margin="16" Spacing="14">
+
+                    <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Processing Unit" FontWeight="SemiBold" />
+                            <Grid ColumnDefinitions="*,*,*">
+                                <RadioButton Grid.Column="0" x:Name="rbProcDefault" GroupName="proc" Content="Default (GPU)" IsChecked="True" />
+                                <RadioButton Grid.Column="1" x:Name="rbProcGpuOnly" GroupName="proc" Content="GPU Only" />
+                                <RadioButton Grid.Column="2" x:Name="rbProcCpu"     GroupName="proc" Content="CPU Only" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="VRAM Usage Preset (GPU only)" FontWeight="SemiBold" />
+                            <Grid ColumnDefinitions="*,*,*,*">
+                                <RadioButton Grid.Column="0" x:Name="rbVramNormal" GroupName="vram" Content="Normal" IsChecked="True" />
+                                <RadioButton Grid.Column="1" x:Name="rbVramHigh"   GroupName="vram" Content="High" />
+                                <RadioButton Grid.Column="2" x:Name="rbVramLow"    GroupName="vram" Content="Low" />
+                                <RadioButton Grid.Column="3" x:Name="rbVramNo"     GroupName="vram" Content="No VRAM (Slow)" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10">
+                        <Grid ColumnDefinitions="140,120,*">
+                            <TextBlock Grid.Column="0" Text="CUDA Device ID:" VerticalAlignment="Center" />
+                            <NumericUpDown Grid.Column="1" x:Name="numCudaDevice" Minimum="0" Maximum="16" Value="0" />
+                        </Grid>
+                    </Border>
+
+                </StackPanel>
+            </TabItem>
+
+            <!-- Advanced -->
+            <TabItem Header="Advanced">
+                <ScrollViewer>
+                    <StackPanel Margin="16" Spacing="14">
+
+                        <CheckBox x:Name="chkDisableCustomNodes" Content="Disable All Custom Nodes" />
+
+                        <Grid ColumnDefinitions="140,*">
+                            <TextBlock Grid.Column="0" Text="Verbose Level:" VerticalAlignment="Center" />
+                            <ComboBox Grid.Column="1" x:Name="cmbVerboseLevel" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="140,*,Auto">
+                            <TextBlock Grid.Column="0" Text="Output Directory:" VerticalAlignment="Center" />
+                            <TextBox Grid.Column="1" x:Name="txtOutputDir" />
+                            <Button Grid.Column="2" x:Name="btnBrowseOutput" Content="Browse..." Margin="6,0,0,0" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="140,*,Auto">
+                            <TextBlock Grid.Column="0" Text="Extra Models Config:" VerticalAlignment="Center" />
+                            <TextBox Grid.Column="1" x:Name="txtExtraModelsPath" />
+                            <Button Grid.Column="2" x:Name="btnBrowseModels" Content="Browse..." Margin="6,0,0,0" />
+                        </Grid>
+
+                        <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="10">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Front-End Version" FontWeight="SemiBold" />
+                                <Grid ColumnDefinitions="Auto,*,Auto" >
+                                    <TextBlock Grid.Column="0" Text="Comfy-Org/ComfyUI_frontend@" VerticalAlignment="Center" />
+                                    <TextBox Grid.Column="1" x:Name="txtFrontEndVersion" Margin="6,0" />
+                                    <CheckBox Grid.Column="2" x:Name="chkFrontEndVersionLatest" Content="latest" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+        </TabControl>
+
+        <Grid Grid.Row="1" Margin="12,4,12,12" ColumnDefinitions="*,Auto,Auto">
+            <TextBlock Grid.Column="0" x:Name="lblVersion" Foreground="#888" VerticalAlignment="Center" />
+            <Button Grid.Column="1" x:Name="btnOk"     Content="OK"     IsDefault="True" Width="80" Margin="0,0,8,0" />
+            <Button Grid.Column="2" x:Name="btnCancel" Content="Cancel" IsCancel="True"  Width="80" />
+        </Grid>
+
+    </Grid>
+</Window>

@@ -1,0 +1,32 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ComfyUIServerManager.Views.LogWindow"
+        Title="ComfyUI Server Logs"
+        Width="900" Height="540"
+        MinWidth="500" MinHeight="300"
+        Background="#0C0C0C">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" Background="#181818" BorderBrush="#333" BorderThickness="0,1,0,0" Padding="8,4">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock x:Name="lblStatus" Foreground="#888" VerticalAlignment="Center" />
+                <TextBlock x:Name="lblFrozenHint" Foreground="#cc7" VerticalAlignment="Center"
+                           Text="(scroll paused — scroll to bottom to resume)" IsVisible="False" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer x:Name="logScroll"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Visible"
+                      AllowAutoHide="False">
+            <ItemsControl x:Name="logItems">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+
+</Window>

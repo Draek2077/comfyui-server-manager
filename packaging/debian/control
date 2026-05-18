@@ -1,0 +1,18 @@
+Package: comfyui-server-manager
+Version: __VERSION__-1
+Section: utils
+Priority: optional
+Architecture: amd64
+Depends: libx11-6, libice6, libsm6, libfontconfig1, hicolor-icon-theme
+Recommends: gnome-shell-extension-appindicator | libappindicator3-1
+Maintainer: Philippe <draekz@gmail.com>
+Homepage: https://github.com/Draek2077/comfyui-server-manager
+Description: Tray utility to manage the ComfyUI server
+ Avalonia tray application for managing a local ComfyUI server. Start,
+ stop, restart and view live logs from a system-tray icon; configure all
+ of ComfyUI's launch flags from a Settings panel. Part of the Draekz
+ ComfyUI suite alongside comfyui-client-wrapper and the ComfyUI Ultimate
+ Installer.
+ .
+ GNOME users will need a StatusNotifier/AppIndicator extension installed
+ to see the tray icon; KDE/Cinnamon/XFCE/MATE show it out of the box.

@@ -1,18 +1,15 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net8.0-windows</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <UseWindowsForms>true</UseWindowsForms>
         <ImplicitUsings>enable</ImplicitUsings>
-        <StartupObject>ComfyUIServerManager.Program</StartupObject>
-        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-        <PublishSingleFile>true</PublishSingleFile>
-        <SelfContained>true</SelfContained>
-        <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>Comfy_Logo.ico</ApplicationIcon>
-        <PublishOnBuild>true</PublishOnBuild>
+        <LangVersion>12</LangVersion>
         <Title>ComfyUI Server Manager</Title>
         <Description>A tray icon management tool for the ComfyUI server.</Description>
         <RepositoryUrl>https://github.com/Draek2077/comfyui-server-manager.git</RepositoryUrl>
@@ -20,53 +17,29 @@
         <Company>Draekz</Company>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <SelfContained>true</SelfContained>
+    </PropertyGroup>
+
     <ItemGroup>
-        <None Remove="Comfy_Off.ico"/>
-        <None Remove="Comfy_On.ico"/>
-        <None Remove="Package.en-us.wxl"/>
-        <None Remove="Package.wxs"/>
+        <AvaloniaResource Include="Assets/**" />
+        <AvaloniaResource Include="Comfy_Logo.ico" />
+        <AvaloniaResource Include="Comfy_On.ico" />
+        <AvaloniaResource Include="Comfy_Off.ico" />
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="Comfy_Logo.ico"/>
-        <EmbeddedResource Include="Comfy_Off.ico"/>
-        <EmbeddedResource Include="Comfy_On.ico"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Compile Update="Properties\Resources.Designer.cs">
-            <DesignTime>True</DesignTime>
-            <AutoGen>True</AutoGen>
-            <DependentUpon>Resources.resx</DependentUpon>
-        </Compile>
-        <Compile Update="Properties\Settings.Designer.cs">
-            <DesignTimeSharedInput>True</DesignTimeSharedInput>
-            <AutoGen>True</AutoGen>
-            <DependentUpon>Settings.settings</DependentUpon>
-        </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
-        <EmbeddedResource Update="Properties\Resources.resx">
-            <Generator>PublicResXFileCodeGenerator</Generator>
-            <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-        </EmbeddedResource>
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Update="Properties\Settings.settings">
-            <Generator>SettingsSingleFileGenerator</Generator>
-            <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-        </None>
-    </ItemGroup>
-
-    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="11.3.15" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.15" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.15" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.15" />
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.15" Condition="'$(Configuration)' == 'Debug'" />
         <PackageReference Include="GitVersion.MsBuild" Version="6.4.0">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="System.Management" Version="9.0.8"/>
     </ItemGroup>
+
     <Target Name="WriteVersionToFile" AfterTargets="CoreCompile">
         <WriteLinesToFile File="$(ProjectDir)version.txt" Lines="$(Version)" Overwrite="true" />
     </Target>
